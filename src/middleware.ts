@@ -37,6 +37,16 @@ const handleAuthRedirects = (
   pathname: string,
   requestUrl: string
 ) => {
+  const url = new URL(requestUrl)
+
+  // If already on auth page with access_denied error, don't redirect again
+  if (
+    pathname === '/auth' &&
+    url.searchParams.get('error') === 'access_denied'
+  ) {
+    return null
+  }
+
   // Check email whitelist for authenticated users
   if (user && user.email && !isEmailAllowed(user.email)) {
     return NextResponse.redirect(
@@ -48,7 +58,12 @@ const handleAuthRedirects = (
     return NextResponse.redirect(new URL('/auth', requestUrl))
   }
 
-  if (pathname === '/auth' && user) {
+  if (
+    pathname === '/auth' &&
+    user &&
+    user.email &&
+    isEmailAllowed(user.email)
+  ) {
     return NextResponse.redirect(new URL('/dashboard', requestUrl))
   }
 

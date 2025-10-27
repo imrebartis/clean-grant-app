@@ -34,12 +34,25 @@ export default function DashboardPage() {
     router.push('/applications/new')
   }
 
+  const handleProfileClick = () => {
+    router.push('/profile')
+  }
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="mx-auto max-w-4xl space-y-6">
-        <h1 className="text-3xl font-bold text-foreground">
-          Welcome to your dashboard
-        </h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-foreground">
+            Welcome to your dashboard
+          </h1>
+          <button
+            onClick={handleProfileClick}
+            className="rounded px-2 py-1 text-primary transition-colors hover:text-primary/80 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            aria-label="Go to profile"
+          >
+            Profile
+          </button>
+        </div>
         <EmptyState onCreateApplication={handleCreateApplication} />
       </div>
     </div>

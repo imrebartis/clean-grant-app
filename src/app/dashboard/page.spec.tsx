@@ -35,4 +35,13 @@ describe('DashboardPage', () => {
 
     expect(mockPush).toHaveBeenCalledWith('/applications/new')
   })
+
+  test('founder can navigate to profile page', () => {
+    render(<DashboardPage />)
+
+    const profileButton = screen.getByText('Profile')
+    fireEvent.click(profileButton)
+
+    expect(mockPush).toHaveBeenCalledWith('/profile')
+  })
 })
