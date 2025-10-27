@@ -1,67 +1,75 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+'use client'
 
-function AuthHeader() {
-  return (
-    <CardHeader className="text-center">
-      <CardTitle>Welcome</CardTitle>
-      <CardDescription>
-        Sign in to create your grant application
-      </CardDescription>
-    </CardHeader>
-  )
+import { useEffect, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
+
+const AuthHeader = () => (
+  <div className="space-y-2 text-center">
+    <h1 className="text-2xl font-bold text-foreground">Welcome</h1>
+    <p className="text-muted-foreground">
+      Sign in to create your grant application
+    </p>
+  </div>
+)
+
+const ErrorMessage = ({ error }: { error: string }) =>
+  error ? (
+    <div className="rounded-lg border border-destructive/20 bg-destructive/10 px-4 py-3 text-destructive">
+      {error}
+    </div>
+  ) : null
+
+const useAuthError = () => {
+  const searchParams = useSearchParams()
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (searchParams.get('error') === 'access_denied') {
+      setError(
+        'Access denied: Your email is not on the allowed list for this MVP.'
+      )
+    }
+  }, [searchParams])
+
+  return error
 }
 
-function OAuthButtons() {
+const handleGoogleSignIn = async () => {
+  const supabase = createClient()
+  await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/auth/callback`,
+    },
+  })
+}
+
+function AuthContent() {
+  const error = useAuthError()
+
   return (
-    <div className="space-y-2">
-      <Button className="w-full" disabled>
+    <>
+      <AuthHeader />
+      <ErrorMessage error={error} />
+      <button
+        onClick={handleGoogleSignIn}
+        className="w-full rounded-lg bg-primary px-4 py-3 text-primary-foreground transition-colors hover:bg-primary/90"
+      >
         Sign in with Google
-      </Button>
-      <Button variant="outline" className="w-full" disabled>
-        Sign in with GitHub
-      </Button>
-    </div>
-  )
-}
-
-function Divider() {
-  return (
-    <div className="relative">
-      <div className="absolute inset-0 flex items-center">
-        <span className="w-full border-t" />
-      </div>
-      <div className="relative flex justify-center text-xs uppercase">
-        <span className="bg-background px-2 text-muted-foreground">
-          Or continue with
-        </span>
-      </div>
-    </div>
+      </button>
+    </>
   )
 }
 
 export default function AuthPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <AuthHeader />
-        <CardContent className="space-y-4">
-          <div className="text-center text-sm text-muted-foreground">
-            Authentication components will be implemented in Phase 1
-          </div>
-          <OAuthButtons />
-          <Divider />
-          <Button variant="outline" className="w-full" disabled>
-            Sign in with Email
-          </Button>
-        </CardContent>
-      </Card>
+      <div className="w-full max-w-md space-y-6">
+        <Suspense fallback={<div>Loading...</div>}>
+          <AuthContent />
+        </Suspense>
+      </div>
     </div>
   )
 }

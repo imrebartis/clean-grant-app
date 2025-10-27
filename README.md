@@ -22,7 +22,7 @@ A simple, focused grant application assistant built with Next.js 14. Helps users
 
 **MVP Focus**
 
-- 🔐 **Authentication**: Email/password and OAuth (Google) with Supabase
+- 🔐 **Authentication**: OAuth (Google) with Supabase and MVP access control
 - 📝 **Grant Applications**: Multi-step form with auto-save functionality
 - 🎤 **Voice Recording**: Record answers and get transcriptions via OpenAI Whisper
 - 📄 **File Upload**: PDF financial statements with basic validation
@@ -37,7 +37,7 @@ A simple, focused grant application assistant built with Next.js 14. Helps users
 - **Framework**: Next.js 14 (App Router) with TypeScript
 - **Database**: Supabase (PostgreSQL + Auth + Storage)
 - **Styling**: Tailwind CSS + shadcn/ui components
-- **Authentication**: Supabase Auth with OAuth (Google)
+- **Authentication**: Supabase Auth with OAuth (Google only for MVP)
 - **Voice**: OpenAI Whisper API for transcription
 
 **Development Tools**
