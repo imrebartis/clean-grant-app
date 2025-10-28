@@ -15,49 +15,69 @@ export interface UserProfile {
   updated_at: string
 }
 
+// Updated to match database schema
 export interface GrantApplication {
   id: ApplicationId
-  user_id: UserId
-  company_name: string
-  founder_name: string
-  founder_email: string
+  user_id: UserId | null
+  title: string
+  status: 'draft' | 'submitted' | 'processing' | 'completed' | null
+  form_data: GrantApplicationFormData | null // All form fields stored in JSON
+  make_webhook_id: string | null
+  make_status: string | null
+  created_at: string | null
+  updated_at: string | null
+  makecom_submission_id: SubmissionId | null
+}
+
+// Form data structure that goes into the form_data JSONB field
+export interface GrantApplicationFormData {
+  // Basic info
+  company_name?: string
+  founder_name?: string
+  founder_email?: string
 
   // Voice recording questions (8 required)
-  business_description: string // "Describe your business in 2 minutes"
-  environmental_problem: string // "What environmental problem are you solving?"
-  business_model: string // "What's your business model - how do you make money?"
-  key_achievements: string // "What are your key achievements in the last 12 months?"
-  funding_use: string // "What would you use this grant funding for specifically?"
-  future_goals: string // "What are your goals for the next 2 years?"
-  competitors: string // "Who are your main competitors or alternatives?"
-  unique_positioning: string // "Why is your company uniquely positioned to succeed?"
+  business_description?: string // "Describe your business in 2 minutes"
+  environmental_problem?: string // "What environmental problem are you solving?"
+  business_model?: string // "What's your business model - how do you make money?"
+  key_achievements?: string // "What are your key achievements in the last 12 months?"
+  funding_use?: string // "What would you use this grant funding for specifically?"
+  future_goals?: string // "What are your goals for the next 2 years?"
+  competitors?: string // "Who are your main competitors or alternatives?"
+  unique_positioning?: string // "Why is your company uniquely positioned to succeed?"
 
   // File upload
   financial_statements_url?: string // PDF file URL
 
-  status: 'draft' | 'submitted' | 'processing' | 'completed'
-  makecom_submission_id?: SubmissionId
-  created_at: string
-  updated_at: string
+  // Additional fields can be added without schema changes
+  [key: string]: unknown
 }
 
+// Updated VoiceRecording interface to match actual database schema
 export interface VoiceRecording {
   id: VoiceRecordingId
   application_id: ApplicationId
-  field_name:
-    | 'business_description'
-    | 'environmental_problem'
-    | 'business_model'
-    | 'key_achievements'
-    | 'funding_use'
-    | 'future_goals'
-    | 'competitors'
-    | 'unique_positioning'
-  audio_url: string
-  transcription: string
-  duration: number
-  file_format: 'mp3' | 'm4a' | 'wav'
-  created_at: string
+  question_id: string // varchar(100) - identifies which question this recording is for
+  file_path: string // varchar(500) - path to the audio file
+  duration: number // integer - duration in seconds
+  attempt_number: number | null // integer - which attempt this is (default 1)
+  transcripts: Record<string, unknown> | null // jsonb - array of transcription attempts
+  selected_transcript: string | null // text - the chosen transcription
+  confidence_score: number | null // decimal(3,2) - transcription confidence
+  needs_review: boolean | null // boolean - whether this needs human review
+  created_at: string | null // timestamp with time zone
+}
+
+// Updated ApplicationSection interface to match actual database schema
+export interface ApplicationSection {
+  id: string
+  application_id: ApplicationId | null
+  section_name: string
+  section_data: Record<string, unknown> | null // JSONB field, not 'content'
+  is_completed: boolean | null
+  completion_percentage: number | null
+  updated_at: string | null
+  // Note: no created_at field in actual schema
 }
 
 export interface MakecomSubmission {
@@ -110,3 +130,28 @@ export interface ThemeColors {
   muted: string
   border: string
 }
+
+// Re-export validation schemas and types
+export {
+  grantApplicationFormDataSchema,
+  grantApplicationCompleteFormSchema,
+  grantApplicationInsertSchema,
+  grantApplicationUpdateSchema,
+  applicationSectionSchema,
+  voiceRecordingSchema,
+  validateGrantApplicationFormData,
+  validateGrantApplicationCompleteForm,
+  validateGrantApplicationInsert,
+  validateGrantApplicationUpdate,
+  validateApplicationSection,
+  validateVoiceRecording,
+  type GrantApplicationFormDataType,
+  type GrantApplicationCompleteForm,
+  type GrantApplicationInsertData,
+  type GrantApplicationUpdateData,
+  type ApplicationSectionData,
+  type VoiceRecordingData,
+  type ApplicationStatus,
+  type VoiceRecordingField,
+  type AudioFileFormat,
+} from '@/lib/validation'
