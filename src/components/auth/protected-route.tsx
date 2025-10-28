@@ -26,7 +26,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
       setLoading(false)
 
       if (!user) {
-        router.push('/auth')
+        router.push('/')
       }
     }
 
@@ -37,7 +37,7 @@ export function ProtectedRoute({ children, fallback }: ProtectedRouteProps) {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session) {
         setUser(null)
-        router.push('/auth')
+        router.push('/')
       } else if (session?.user) {
         setUser(session.user)
       }

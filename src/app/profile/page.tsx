@@ -111,7 +111,7 @@ function ProfileContent() {
   const handleSignOut = async () => {
     const supabase = createClient()
     await supabase.auth.signOut()
-    router.push('/auth')
+    router.push('/')
   }
 
   if (loading) {

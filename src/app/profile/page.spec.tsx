@@ -90,7 +90,7 @@ describe('ProfilePage', () => {
 
     await waitFor(() => {
       expect(mockSignOut).toHaveBeenCalled()
-      expect(mockPush).toHaveBeenCalledWith('/auth')
+      expect(mockPush).toHaveBeenCalledWith('/')
     })
   })
 

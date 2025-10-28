@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { OAuthButtons } from '@/components/auth/oauth-buttons'
 
 const AuthHeader = () => (
@@ -55,7 +55,7 @@ const useSignOutEffect = (
   shouldSignOut: boolean,
   setIsSigningOut: (value: boolean) => void,
   setShouldSignOut: (value: boolean) => void,
-  setError: (error: string) => void
+  router: { push: (path: string) => void }
 ) => {
   useEffect(() => {
     if (!shouldSignOut) return
@@ -67,31 +67,30 @@ const useSignOutEffect = (
         await supabase.auth.signOut()
         console.log('Sign out completed') // Debug log
 
-        // After sign out, show error message
+        // After sign out, redirect to landing page gracefully
         setIsSigningOut(false)
         setShouldSignOut(false)
-        setError(
-          'Access denied: Your email is not on the allowed list for this MVP. Please contact support if you believe this is an error.'
-        )
+        router.push('/')
       } catch (signOutError) {
         console.error('Error signing out:', signOutError)
         setIsSigningOut(false)
         setShouldSignOut(false)
-        setError('Authentication failed. Please try again.')
+        router.push('/')
       }
     }
 
     signOutUser()
-  }, [shouldSignOut, setIsSigningOut, setShouldSignOut, setError])
+  }, [shouldSignOut, setIsSigningOut, setShouldSignOut, router])
 }
 
 function AuthContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const [error, setError] = useState('')
   const [isSigningOut, setIsSigningOut] = useState(false)
   const [shouldSignOut, setShouldSignOut] = useState(false)
 
-  useSignOutEffect(shouldSignOut, setIsSigningOut, setShouldSignOut, setError)
+  useSignOutEffect(shouldSignOut, setIsSigningOut, setShouldSignOut, router)
 
   useEffect(() => {
     const errorParam = searchParams.get('error')
@@ -104,7 +103,7 @@ function AuthContent() {
     } else if (errorParam) {
       setError('Authentication failed. Please try again.')
     }
-  }, [searchParams])
+  }, [searchParams, router])
 
   if (isSigningOut) {
     return <SigningOutView />

@@ -63,7 +63,7 @@ describe('ProtectedRoute', () => {
     expect(screen.getByText('Custom loading')).toBeInTheDocument()
   })
 
-  test('redirects to auth when user is not authenticated', async () => {
+  test('redirects to landing page when user is not authenticated', async () => {
     mockGetUser.mockResolvedValue({ data: { user: null } })
 
     render(
@@ -73,7 +73,7 @@ describe('ProtectedRoute', () => {
     )
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/auth')
+      expect(mockPush).toHaveBeenCalledWith('/')
     })
 
     expect(screen.queryByText('Protected content')).not.toBeInTheDocument()
@@ -96,7 +96,7 @@ describe('ProtectedRoute', () => {
     expect(mockPush).not.toHaveBeenCalled()
   })
 
-  test('redirects to auth when user signs out', async () => {
+  test('redirects to landing page when user signs out', async () => {
     const mockUser = { id: '123', email: 'test@example.com' }
     mockGetUser.mockResolvedValue({ data: { user: mockUser } })
 
@@ -124,7 +124,7 @@ describe('ProtectedRoute', () => {
     authStateCallback!('SIGNED_OUT', null)
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith('/auth')
+      expect(mockPush).toHaveBeenCalledWith('/')
     })
   })
 })

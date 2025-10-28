@@ -14,18 +14,24 @@ jest.mock('@/lib/supabase', () => ({
   }),
 }))
 
-// Mock Next.js useSearchParams
+// Mock Next.js navigation hooks
 const mockSearchParams = {
   get: jest.fn<string | null, [string]>(() => null),
 }
+const mockPush = jest.fn()
+const mockRouter = {
+  push: mockPush,
+}
 jest.mock('next/navigation', () => ({
   useSearchParams: () => mockSearchParams,
+  useRouter: () => mockRouter,
 }))
 
 describe('AuthPage', () => {
   beforeEach(() => {
     mockSignInWithOAuth.mockClear()
     mockSignOut.mockClear()
+    mockPush.mockClear()
     mockSearchParams.get.mockReturnValue(null)
   })
 
@@ -51,7 +57,7 @@ describe('AuthPage', () => {
     })
   })
 
-  test('shows helpful error message and signs out user when access is denied', async () => {
+  test('signs out user and redirects to landing page when access is denied', async () => {
     mockSearchParams.get.mockReturnValue('access_denied')
     mockSignOut.mockResolvedValue({})
 
@@ -60,13 +66,10 @@ describe('AuthPage', () => {
     // Should show signing out message initially
     expect(screen.getByText('Signing you out...')).toBeInTheDocument()
 
-    // Wait for sign out to complete and error message to appear
-    await screen.findByText(/Access denied/)
+    // Wait for sign out to complete and redirect
+    await new Promise(resolve => setTimeout(resolve, 100))
 
     expect(mockSignOut).toHaveBeenCalled()
-    expect(screen.getByText('What can you do?')).toBeInTheDocument()
-    expect(
-      screen.getByText(/Contact the administrator to request access/)
-    ).toBeInTheDocument()
+    expect(mockPush).toHaveBeenCalledWith('/')
   })
 })

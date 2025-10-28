@@ -47,15 +47,15 @@ const handleAuthRedirects = (
     return null
   }
 
-  // Check email whitelist for authenticated users
+  // Check email whitelist for authenticated users - redirect to landing page gracefully
   if (user && user.email && !isEmailAllowed(user.email)) {
-    return NextResponse.redirect(
-      new URL('/auth?error=access_denied', requestUrl)
-    )
+    // Sign out the user and redirect to landing page without error message
+    return NextResponse.redirect(new URL('/', requestUrl))
   }
 
+  // Redirect unauthenticated users from protected routes to landing page
   if (isProtectedRoute(pathname) && !user) {
-    return NextResponse.redirect(new URL('/auth', requestUrl))
+    return NextResponse.redirect(new URL('/', requestUrl))
   }
 
   if (
