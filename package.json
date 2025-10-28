@@ -23,6 +23,7 @@
   "dependencies": {
     "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-slot": "^1.1.0",
+    "@supabase/auth-helpers-nextjs": "0.10.0",
     "@supabase/ssr": "^0.5.1",
     "@supabase/supabase-js": "^2.76.1",
     "class-variance-authority": "^0.7.0",
@@ -63,7 +64,7 @@
     "typescript": "^5"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
+    "src/**/*.{js,jsx,ts,tsx}": [
       "prettier --write",
       "eslint --fix"
     ],

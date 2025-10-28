@@ -42,6 +42,20 @@
           }
         ]
       }
+    },
+    {
+      "files": [
+        "**/*.spec.ts",
+        "**/*.spec.tsx",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/test-*.ts",
+        "**/__tests__/**/*.ts",
+        "**/supabase-test.ts"
+      ],
+      "rules": {
+        "max-lines-per-function": "off"
+      }
     }
   ],
   "parser": "@typescript-eslint/parser",

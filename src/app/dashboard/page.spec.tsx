@@ -15,10 +15,10 @@ describe('DashboardPage', () => {
     mockPush.mockClear()
   })
 
-  test('founder can see dashboard welcome message', () => {
+  test('founder can see dashboard title', () => {
     render(<DashboardPage />)
 
-    expect(screen.getByText('Welcome to your dashboard')).toBeInTheDocument()
+    expect(screen.getByText('Grant Application Dashboard')).toBeInTheDocument()
   })
 
   test('founder can see create new application button', () => {
