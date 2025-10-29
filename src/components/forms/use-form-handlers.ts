@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   type GrantApplicationFormDataType,
-  validateGrantApplicationFormData,
+  validateGrantApplicationCompleteForm,
 } from '@/lib/validation'
 import { FORM_STEPS } from './form-constants'
 
@@ -25,46 +25,28 @@ interface UseFormHandlersProps {
 }
 
 export function useFormHandlers(props: UseFormHandlersProps) {
-  const autoSave = useAutoSave(props)
   const handleFieldChange = useFieldChange(props)
   const validateCurrentStep = useStepValidation(props)
-  const handleNext = useNextStep(props, validateCurrentStep)
+  const handleNext = useNextStep(
+    {
+      setCurrentStep: props.setCurrentStep,
+      onSave: props.onSave,
+      formData: props.formData,
+      setIsSaving: props.setIsSaving,
+      setLastSaved: props.setLastSaved,
+    },
+    validateCurrentStep
+  )
   const handlePrevious = usePreviousStep(props)
   const handleSubmit = useFormSubmit(props)
 
   return {
-    autoSave,
     handleFieldChange,
     validateCurrentStep,
     handleNext,
     handlePrevious,
     handleSubmit,
   }
-}
-
-function useAutoSave({
-  formData,
-  onSave,
-  isSaving,
-  setIsSaving,
-  setLastSaved,
-}: Pick<
-  UseFormHandlersProps,
-  'formData' | 'onSave' | 'isSaving' | 'setIsSaving' | 'setLastSaved'
->) {
-  return useCallback(async () => {
-    if (!onSave || isSaving) return
-
-    try {
-      setIsSaving(true)
-      await onSave(formData)
-      setLastSaved(new Date())
-    } catch (error) {
-      console.error('Auto-save failed:', error)
-    } finally {
-      setIsSaving(false)
-    }
-  }, [formData, onSave, isSaving, setIsSaving, setLastSaved])
 }
 
 function useFieldChange({
@@ -102,6 +84,13 @@ function useStepValidation({
 
       if (!value || (typeof value === 'string' && value.trim() === '')) {
         stepErrors[field] = `${field.replace('_', ' ')} is required`
+      } else if (field === 'founder_email') {
+        // Additional email format validation
+        const emailRegex =
+          /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
+        if (!emailRegex.test(value as string)) {
+          stepErrors[field] = 'Please enter a valid email address'
+        }
       }
     })
 
@@ -111,14 +100,44 @@ function useStepValidation({
 }
 
 function useNextStep(
-  { setCurrentStep }: Pick<UseFormHandlersProps, 'setCurrentStep'>,
+  {
+    setCurrentStep,
+    onSave,
+    formData,
+    setIsSaving,
+    setLastSaved,
+  }: Pick<
+    UseFormHandlersProps,
+    'setCurrentStep' | 'onSave' | 'formData' | 'setIsSaving' | 'setLastSaved'
+  >,
   validateCurrentStep: () => boolean
 ) {
-  return useCallback(() => {
+  return useCallback(async () => {
     if (validateCurrentStep()) {
+      // Save form data when moving to next step
+      if (onSave) {
+        try {
+          setIsSaving(true)
+          await onSave(formData)
+          setLastSaved(new Date())
+        } catch (error) {
+          console.error('Save failed:', error)
+          // Don't prevent navigation on save failure, just log it
+        } finally {
+          setIsSaving(false)
+        }
+      }
+
       setCurrentStep(prev => Math.min(prev + 1, FORM_STEPS.length - 1))
     }
-  }, [validateCurrentStep, setCurrentStep])
+  }, [
+    validateCurrentStep,
+    setCurrentStep,
+    onSave,
+    formData,
+    setIsSaving,
+    setLastSaved,
+  ])
 }
 
 function usePreviousStep({
@@ -144,7 +163,7 @@ function useFormSubmit({
 
     try {
       setIsLoading(true)
-      const validatedData = validateGrantApplicationFormData(formData)
+      const validatedData = validateGrantApplicationCompleteForm(formData)
       await onSubmit(validatedData)
       router.push('/dashboard')
     } catch (error) {

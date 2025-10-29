@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { type GrantApplicationFormDataType } from '@/lib/validation'
 import { ApplicationId } from '@/types'
@@ -26,8 +26,6 @@ export function ApplicationForm(props: ApplicationFormProps) {
     router: useRouter(),
   })
 
-  useAutoSaveEffect(formState.formData, formHandlers.autoSave)
-
   const currentStepConfig = FORM_STEPS[formState.currentStep]
   const progress = ((formState.currentStep + 1) / FORM_STEPS.length) * 100
 
@@ -52,6 +50,7 @@ export function ApplicationForm(props: ApplicationFormProps) {
         <FormNavigation
           currentStep={formState.currentStep}
           isLoading={formState.isLoading}
+          isSaving={formState.isSaving}
           onPrevious={formHandlers.handlePrevious}
           onNext={formHandlers.handleNext}
           onSubmit={formHandlers.handleSubmit}
@@ -84,19 +83,4 @@ function useFormState(initialData: GrantApplicationFormDataType = {}) {
     lastSaved,
     setLastSaved,
   }
-}
-
-function useAutoSaveEffect(
-  formData: GrantApplicationFormDataType,
-  autoSave: () => void
-) {
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (Object.keys(formData).length > 0) {
-        autoSave()
-      }
-    }, 2000)
-
-    return () => clearTimeout(timeoutId)
-  }, [formData, autoSave])
 }
