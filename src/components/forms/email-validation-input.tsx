@@ -1,14 +1,13 @@
-import { useState, useCallback } from 'react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import { useEmailValidation } from '@/hooks/use-email-validation'
+import {
+  validateEmail,
+  type EmailValidationResult,
+} from '@/lib/email-validation'
 
-interface EmailValidationResult {
-  isValid: boolean
-  error?: string
-  ariaLabel?: string
-}
-
+// Types
 interface EmailValidationInputProps {
   id: string
   label: string
@@ -20,105 +19,73 @@ interface EmailValidationInputProps {
   required?: boolean
 }
 
-// RFC 5322 compliant email validation
-function validateEmail(email: string): EmailValidationResult {
-  // Empty field handling
-  if (!email.trim()) {
-    return { isValid: false }
-  }
-
-  // RFC 5322 regex pattern
-  const emailRegex =
-    /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/
-
-  if (!emailRegex.test(email)) {
-    return {
-      isValid: false,
-      error: 'Please enter a valid email address (e.g., founder@company.com)',
-      ariaLabel: 'Invalid email format. Please enter a valid email address.',
-    }
-  }
-
-  return { isValid: true }
-}
-
-// Custom hook for email validation with debouncing
-function useEmailValidation(email: string, debounceMs: number = 300) {
-  const [validationState, setValidationState] = useState<EmailValidationResult>(
-    () => {
-      // Initialize with validation of the current email value
-      return email ? validateEmail(email) : { isValid: true }
-    }
-  )
-  const [isValidating, setIsValidating] = useState(false)
-
-  const validateEmailDebounced = useCallback(
-    (value: string, immediate: boolean = false) => {
-      if (immediate) {
-        const result = validateEmail(value)
-        setValidationState(result)
-        setIsValidating(false)
-        return
-      }
-
-      setIsValidating(true)
-      const timeoutId = setTimeout(() => {
-        const result = validateEmail(value)
-        setValidationState(result)
-        setIsValidating(false)
-      }, debounceMs)
-
-      return () => clearTimeout(timeoutId)
-    },
-    [debounceMs]
-  )
-
-  return {
-    validationState,
-    isValidating,
-    validateEmail: validateEmailDebounced,
-  }
-}
-
-// Validation feedback component
-function ValidationFeedback({
-  id,
-  hasValidationError,
-  showSuccess,
-  validationState,
-  error,
-}: {
+interface ValidationFeedbackProps {
   id: string
   hasValidationError: boolean
   showSuccess: boolean
+  isValidating: boolean
   validationState: EmailValidationResult
   error?: string
-}) {
+}
+
+// Sub-components
+function LoadingState() {
   return (
-    <div id={`${id}-validation`} role="status" aria-live="polite">
-      {hasValidationError && (
-        <div className="flex items-center gap-1 text-sm text-destructive">
-          <span aria-hidden="true">⚠</span>
-          {validationState.error}
-        </div>
-      )}
-      {showSuccess && (
-        <div className="flex items-center gap-1 text-sm text-green-600">
-          <span aria-hidden="true">✓</span>
-          Valid email address
-        </div>
-      )}
-      {error && (
-        <div className="flex items-center gap-1 text-sm text-destructive">
-          <span aria-hidden="true">⚠</span>
-          {error}
-        </div>
-      )}
+    <div className="flex items-center gap-1 text-sm text-blue-600">
+      <span aria-hidden="true" className="animate-pulse">
+        ⏳
+      </span>
+      <span className="sr-only">Validating email format</span>
+      Checking email format...
     </div>
   )
 }
 
-// Email input handlers
+function ErrorState({
+  message,
+  ariaLabel,
+}: {
+  message: string
+  ariaLabel?: string
+}) {
+  return (
+    <div className="flex items-center gap-1 text-sm text-destructive">
+      <span aria-hidden="true">⚠</span>
+      <span aria-label={ariaLabel}>{message}</span>
+    </div>
+  )
+}
+
+function SuccessState() {
+  return (
+    <div className="flex items-center gap-1 text-sm text-green-600">
+      <span aria-hidden="true">✓</span>
+      <span aria-label="Email format is valid">Valid email address</span>
+    </div>
+  )
+}
+
+function ValidationFeedback({
+  hasValidationError,
+  showSuccess,
+  isValidating,
+  validationState,
+  error,
+}: ValidationFeedbackProps) {
+  if (isValidating) return <LoadingState />
+  if (hasValidationError)
+    return (
+      <ErrorState
+        message={validationState.error || 'Invalid email'}
+        ariaLabel={validationState.ariaLabel}
+      />
+    )
+  if (showSuccess) return <SuccessState />
+  if (error) return <ErrorState message={error} />
+  return null
+}
+
+// Hook for input handlers
 function useEmailInputHandlers(
   onChange: (value: string) => void,
   onBlur: (() => void) | undefined,
@@ -138,6 +105,100 @@ function useEmailInputHandlers(
   return { handleChange, handleBlur }
 }
 
+// Email Input Component
+function EmailInput({
+  id,
+  value,
+  onChange,
+  onBlur,
+  hasError,
+  showSuccess,
+  isValidating,
+  error,
+  className,
+  required,
+}: {
+  id: string
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  onBlur: (e: React.FocusEvent<HTMLInputElement>) => void
+  hasError: boolean
+  showSuccess: boolean
+  isValidating: boolean
+  error?: string
+  className?: string
+  required: boolean
+}) {
+  return (
+    <Input
+      id={id}
+      type="email"
+      value={value}
+      onChange={onChange}
+      onBlur={onBlur}
+      placeholder="Enter your email address"
+      aria-invalid={hasError || !!error}
+      aria-describedby={`${id}-validation ${id}-help`}
+      aria-required={required}
+      className={cn(
+        className,
+        hasError && 'border-destructive focus:border-destructive',
+        showSuccess && 'border-green-500 focus:border-green-500',
+        isValidating && 'border-blue-300 focus:border-blue-300'
+      )}
+    />
+  )
+}
+
+// Label Component
+function EmailLabel({
+  id,
+  label,
+  required,
+}: {
+  id: string
+  label: string
+  required: boolean
+}) {
+  return (
+    <Label htmlFor={id} className="text-sm font-medium">
+      {label}
+      {required && (
+        <span className="ml-1 text-destructive" aria-label="required">
+          *
+        </span>
+      )}
+    </Label>
+  )
+}
+
+// Help Text Component
+function HelpText({ id }: { id: string }) {
+  return (
+    <div id={`${id}-help`} className="sr-only">
+      Email format: example@domain.com
+    </div>
+  )
+}
+
+// Validation state hooks
+function useEmailValidationState(value: string) {
+  const {
+    validationState,
+    validateEmail: validateEmailFn,
+    isValidating,
+  } = useEmailValidation(value, { debounceMs: 300, validateOnMount: true })
+
+  return {
+    validationState,
+    validateEmail: validateEmailFn,
+    isValidating,
+    hasValidationError: !validationState.isValid && !!value,
+    showSuccess: validationState.isValid && !!value && !isValidating,
+  }
+}
+
+// Main component
 export function EmailValidationInput({
   id,
   label,
@@ -148,44 +209,69 @@ export function EmailValidationInput({
   className,
   required = false,
 }: EmailValidationInputProps) {
-  const { validationState, validateEmail: validateEmailFn } =
-    useEmailValidation(value)
+  const {
+    validationState,
+    validateEmail: validateEmailFn,
+    isValidating,
+    hasValidationError,
+    showSuccess,
+  } = useEmailValidationState(value)
+
   const { handleChange, handleBlur } = useEmailInputHandlers(
     onChange,
     onBlur,
     validateEmailFn
   )
 
-  const hasValidationError = !validationState.isValid && !!value
-  const showSuccess = validationState.isValid && !!value
-
   return (
     <div className="space-y-2">
-      <Label htmlFor={id} className="text-sm font-medium">
-        {label}
-        {required && <span className="ml-1 text-destructive">*</span>}
-      </Label>
-
-      <Input
+      <EmailLabel id={id} label={label} required={required} />
+      <EmailInput
         id={id}
-        type="email"
         value={value}
         onChange={handleChange}
         onBlur={handleBlur}
-        placeholder="Enter your email address"
-        aria-invalid={hasValidationError || !!error}
-        aria-describedby={`${id}-validation`}
-        className={cn(
-          className,
-          hasValidationError && 'border-destructive focus:border-destructive',
-          showSuccess && 'border-green-500 focus:border-green-500'
-        )}
+        hasError={hasValidationError}
+        showSuccess={showSuccess}
+        isValidating={isValidating}
+        error={error}
+        className={className}
+        required={required}
       />
+      <ValidationFeedbackContainer
+        id={id}
+        hasValidationError={hasValidationError}
+        showSuccess={showSuccess}
+        isValidating={isValidating}
+        validationState={validationState}
+        error={error}
+      />
+      <HelpText id={id} />
+    </div>
+  )
+}
 
+// Validation feedback container component
+function ValidationFeedbackContainer({
+  id,
+  hasValidationError,
+  showSuccess,
+  isValidating,
+  validationState,
+  error,
+}: ValidationFeedbackProps) {
+  return (
+    <div
+      id={`${id}-validation`}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <ValidationFeedback
         id={id}
         hasValidationError={hasValidationError}
         showSuccess={showSuccess}
+        isValidating={isValidating}
         validationState={validationState}
         error={error}
       />

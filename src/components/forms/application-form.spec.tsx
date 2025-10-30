@@ -119,7 +119,8 @@ describe('ApplicationForm', () => {
 
     expect(screen.getByTestId('form-header')).toBeInTheDocument()
     expect(screen.getByTestId('form-content')).toBeInTheDocument()
-    expect(screen.getByTestId('form-navigation')).toBeInTheDocument()
+    expect(screen.getByText('Previous')).toBeInTheDocument()
+    expect(screen.getByText('Next')).toBeInTheDocument()
   })
 
   test('starts at step 0', () => {
@@ -239,7 +240,14 @@ describe('ApplicationForm', () => {
       />
     )
 
-    const submitButton = screen.getByText('Submit')
+    // Navigate to last step first by clicking Next multiple times
+    let nextButton = screen.queryByText('Next') as HTMLButtonElement | null
+    while (nextButton && !nextButton.disabled) {
+      await user.click(nextButton)
+      nextButton = screen.queryByText('Next') as HTMLButtonElement | null
+    }
+
+    const submitButton = screen.getByText('Submit Application')
     await user.click(submitButton)
 
     await waitFor(() => {
@@ -261,11 +269,14 @@ describe('ApplicationForm', () => {
     const nextButton = screen.getByText('Next')
     await user.click(nextButton)
 
-    // Should show saving state - use getAllByText to handle multiple elements
-    expect(screen.getAllByText('Saving: Yes')).toHaveLength(2)
+    // Should show saving state in header
+    expect(screen.getByText('Saving: Yes')).toBeInTheDocument()
+    // Should show saving state in button
+    expect(screen.getByText('Saving...')).toBeInTheDocument()
 
     await waitFor(() => {
-      expect(screen.getAllByText('Saving: No')).toHaveLength(2)
+      expect(screen.getByText('Saving: No')).toBeInTheDocument()
+      expect(screen.getByText('Next')).toBeInTheDocument()
     })
   })
 
@@ -298,14 +309,21 @@ describe('ApplicationForm', () => {
       />
     )
 
-    const submitButton = screen.getByText('Submit')
+    // Navigate to last step first by clicking Next multiple times
+    let nextButton = screen.queryByText('Next')
+    while (nextButton && !(nextButton as HTMLButtonElement).disabled) {
+      await user.click(nextButton)
+      nextButton = screen.queryByText('Next')
+    }
+
+    const submitButton = screen.getByText('Submit Application')
     await user.click(submitButton)
 
-    // Should show loading state
-    expect(screen.getByText('Loading: Yes')).toBeInTheDocument()
+    // Should show loading state in button
+    expect(screen.getByText('Submitting...')).toBeInTheDocument()
 
     await waitFor(() => {
-      expect(screen.getByText('Loading: No')).toBeInTheDocument()
+      expect(screen.getByText('Submit Application')).toBeInTheDocument()
     })
   })
 

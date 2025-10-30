@@ -8,7 +8,7 @@ import { useFormHandlers } from './use-form-handlers'
 import { FORM_STEPS } from './form-constants'
 import { FormHeader } from './form-header'
 import { FormContent } from './form-content'
-import { FormNavigation } from './form-navigation'
+import { FormNavigationButtons } from './form-navigation-buttons'
 
 interface ApplicationFormProps {
   applicationId?: ApplicationId
@@ -47,8 +47,9 @@ export function ApplicationForm(props: ApplicationFormProps) {
           onFieldChange={formHandlers.handleFieldChange}
         />
 
-        <FormNavigation
+        <FormNavigationButtons
           currentStep={formState.currentStep}
+          formData={formState.formData}
           isLoading={formState.isLoading}
           isSaving={formState.isSaving}
           onPrevious={formHandlers.handlePrevious}

@@ -1,7 +1,17 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import '@testing-library/jest-dom'
-import { EmailValidationInput, validateEmail } from './email-validation-input'
+import { EmailValidationInput } from './email-validation-input'
+import { validateEmail } from '../../lib/email-validation'
+
+// Mock the hook to avoid timer issues in tests
+jest.mock('@/hooks/use-email-validation', () => ({
+  useEmailValidation: (value: string) => ({
+    validationState: validateEmail(value),
+    isValidating: false,
+    validateEmail: jest.fn(),
+  }),
+}))
 
 describe('validateEmail', () => {
   test('returns valid for correct email format', () => {
@@ -159,7 +169,10 @@ describe('EmailValidationInput', () => {
     const input = screen.getByLabelText('Email Address')
 
     expect(input).toHaveAttribute('aria-invalid', 'true')
-    expect(input).toHaveAttribute('aria-describedby', 'test-email-validation')
+    expect(input).toHaveAttribute(
+      'aria-describedby',
+      'test-email-validation test-email-help'
+    )
   })
 
   test('validation feedback has proper ARIA attributes', async () => {
