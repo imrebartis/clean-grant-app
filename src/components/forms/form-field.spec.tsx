@@ -68,7 +68,12 @@ describe('FormField', () => {
   test('formats field label correctly', () => {
     render(<FormField {...defaultProps} field="company_name" />)
 
-    expect(screen.getByLabelText('Company Name')).toBeInTheDocument()
+    // Check that the label text is formatted correctly by looking for the text content
+    expect(screen.getByText('Company Name')).toBeInTheDocument()
+    // Also verify the input is properly labeled by checking it exists with the correct id
+    expect(
+      screen.getByRole('textbox', { name: /company name/i })
+    ).toBeInTheDocument()
   })
 
   test('renders email validation input for email fields', () => {
@@ -103,7 +108,10 @@ describe('FormField', () => {
       <FormField {...defaultProps} question="What is your business model?" />
     )
 
-    expect(screen.getByText('What is your business model?')).toBeInTheDocument()
+    // The question appears in the placeholder text, not as standalone text
+    expect(
+      screen.getByPlaceholderText('Answer: What is your business model?')
+    ).toBeInTheDocument()
   })
 
   test('calls onChange when input value changes', async () => {

@@ -13,7 +13,10 @@ import { FormNavigationButtons } from './form-navigation-buttons'
 interface ApplicationFormProps {
   applicationId?: ApplicationId
   initialData?: GrantApplicationFormDataType
-  onSave?: (data: GrantApplicationFormDataType) => Promise<void>
+  onSave?: (
+    data: GrantApplicationFormDataType,
+    currentStep?: number
+  ) => Promise<void>
   onSubmit?: (data: GrantApplicationFormDataType) => Promise<void>
 }
 
@@ -61,10 +64,25 @@ export function ApplicationForm(props: ApplicationFormProps) {
   )
 }
 
-function useFormState(initialData: GrantApplicationFormDataType = {}) {
+function useFormState(initialData?: GrantApplicationFormDataType) {
   const [currentStep, setCurrentStep] = useState(0)
-  const [formData, setFormData] =
-    useState<GrantApplicationFormDataType>(initialData)
+  const [formData, setFormData] = useState<GrantApplicationFormDataType>(
+    initialData || {
+      company_name: '',
+      founder_name: '',
+      founder_email: '',
+      website_url: '',
+      business_description: '',
+      environmental_problem: '',
+      business_model: '',
+      key_achievements: '',
+      funding_use: '',
+      future_goals: '',
+      competitors: '',
+      unique_positioning: '',
+      financial_statements_url: undefined,
+    }
+  )
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(false)
   const [isSaving, setIsSaving] = useState(false)

@@ -20,7 +20,7 @@ export interface GrantApplication {
   id: ApplicationId
   user_id: UserId | null
   title: string
-  status: 'draft' | 'submitted' | 'processing' | 'completed' | null
+  status: 'draft' | 'submitted' | 'processing' | 'completed' | 'failed' | null
   form_data: GrantApplicationFormData | null // All form fields stored in JSON
   make_webhook_id: string | null
   make_status: string | null
@@ -31,10 +31,11 @@ export interface GrantApplication {
 
 // Form data structure that goes into the form_data JSONB field
 export interface GrantApplicationFormData {
-  // Basic info
-  company_name?: string
-  founder_name?: string
-  founder_email?: string
+  // Basic info (required fields)
+  company_name: string
+  founder_name: string
+  founder_email: string
+  website_url: string
 
   // Voice recording questions (8 required)
   business_description?: string // "Describe your business in 2 minutes"
@@ -46,7 +47,7 @@ export interface GrantApplicationFormData {
   competitors?: string // "Who are your main competitors or alternatives?"
   unique_positioning?: string // "Why is your company uniquely positioned to succeed?"
 
-  // File upload
+  // Optional file upload
   financial_statements_url?: string // PDF file URL
 
   // Additional fields can be added without schema changes

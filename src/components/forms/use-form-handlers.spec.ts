@@ -2,12 +2,10 @@ import { renderHook, act } from '@testing-library/react'
 import { useRouter } from 'next/navigation'
 import { useFormHandlers } from './use-form-handlers'
 
-// Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
 }))
 
-// Mock form constants
 jest.mock('./form-constants', () => ({
   FORM_STEPS: [
     { id: 'step1', fields: ['company_name', 'founder_name'] },
@@ -15,6 +13,14 @@ jest.mock('./form-constants', () => ({
     { id: 'step3', fields: ['business_description'] },
   ],
 }))
+
+const createTestFormData = (overrides = {}) => ({
+  company_name: 'Test Company',
+  founder_name: 'John Doe',
+  founder_email: 'john@example.com',
+  website_url: 'https://example.com',
+  ...overrides,
+})
 
 describe('useFormHandlers', () => {
   const mockRouter = {
@@ -27,7 +33,7 @@ describe('useFormHandlers', () => {
   }
 
   const defaultProps = {
-    formData: {},
+    formData: createTestFormData(),
     setFormData: jest.fn(),
     errors: {},
     setErrors: jest.fn(),
@@ -70,7 +76,10 @@ describe('useFormHandlers', () => {
     const { result } = renderHook(() =>
       useFormHandlers({
         ...defaultProps,
-        formData: { company_name: 'Test Company', founder_name: 'John Doe' },
+        formData: createTestFormData({
+          company_name: 'Test Company',
+          founder_name: 'John Doe',
+        }),
       })
     )
 
@@ -89,7 +98,7 @@ describe('useFormHandlers', () => {
       useFormHandlers({
         ...defaultProps,
         setErrors: mockSetErrors,
-        formData: { company_name: '' }, // Missing required field
+        formData: createTestFormData({ company_name: '' }),
       })
     )
 
@@ -108,9 +117,9 @@ describe('useFormHandlers', () => {
     const { result } = renderHook(() =>
       useFormHandlers({
         ...defaultProps,
-        currentStep: 1, // Email step
+        currentStep: 1,
         setErrors: mockSetErrors,
-        formData: { founder_email: 'invalid-email' },
+        formData: createTestFormData({ founder_email: 'invalid-email' }),
       })
     )
 
@@ -140,7 +149,10 @@ describe('useFormHandlers', () => {
         onSave: mockOnSave,
         setIsSaving: mockSetIsSaving,
         setLastSaved: mockSetLastSaved,
-        formData: { company_name: 'Test Company', founder_name: 'John Doe' },
+        formData: createTestFormData({
+          company_name: 'Test Company',
+          founder_name: 'John Doe',
+        }),
       })
     )
 
@@ -162,7 +174,7 @@ describe('useFormHandlers', () => {
       useFormHandlers({
         ...defaultProps,
         setCurrentStep: mockSetCurrentStep,
-        formData: { company_name: '' }, // Invalid data
+        formData: createTestFormData({ company_name: '' }),
       })
     )
 
@@ -185,7 +197,10 @@ describe('useFormHandlers', () => {
         onSave: mockOnSave,
         setIsSaving: mockSetIsSaving,
         setCurrentStep: mockSetCurrentStep,
-        formData: { company_name: 'Test Company', founder_name: 'John Doe' },
+        formData: createTestFormData({
+          company_name: 'Test Company',
+          founder_name: 'John Doe',
+        }),
       })
     )
 
@@ -194,7 +209,7 @@ describe('useFormHandlers', () => {
     })
 
     expect(consoleSpy).toHaveBeenCalledWith('Save failed:', expect.any(Error))
-    expect(mockSetCurrentStep).toHaveBeenCalled() // Should still advance despite save error
+    expect(mockSetCurrentStep).toHaveBeenCalled()
 
     consoleSpy.mockRestore()
   })
@@ -244,10 +259,7 @@ describe('useFormHandlers', () => {
         ...defaultProps,
         onSubmit: mockOnSubmit,
         setIsLoading: mockSetIsLoading,
-        formData: {
-          company_name: 'Test Company',
-          founder_name: 'John Doe',
-          founder_email: 'john@example.com',
+        formData: createTestFormData({
           business_description: 'Test business description',
           environmental_problem: 'Test environmental problem',
           business_model: 'Test business model',
@@ -256,7 +268,8 @@ describe('useFormHandlers', () => {
           future_goals: 'Test future goals',
           competitors: 'Test competitors',
           unique_positioning: 'Test positioning',
-        },
+          financial_statements_url: undefined,
+        }),
       })
     )
 
@@ -279,7 +292,7 @@ describe('useFormHandlers', () => {
         ...defaultProps,
         onSubmit: mockOnSubmit,
         setErrors: mockSetErrors,
-        formData: {}, // Invalid data
+        formData: createTestFormData({ company_name: '' }),
       })
     )
 
@@ -309,10 +322,7 @@ describe('useFormHandlers', () => {
         onSubmit: mockOnSubmit,
         setErrors: mockSetErrors,
         setIsLoading: mockSetIsLoading,
-        formData: {
-          company_name: 'Test Company',
-          founder_name: 'John Doe',
-          founder_email: 'john@example.com',
+        formData: createTestFormData({
           business_description: 'Test business description',
           environmental_problem: 'Test environmental problem',
           business_model: 'Test business model',
@@ -321,7 +331,7 @@ describe('useFormHandlers', () => {
           future_goals: 'Test future goals',
           competitors: 'Test competitors',
           unique_positioning: 'Test positioning',
-        },
+        }),
       })
     )
 

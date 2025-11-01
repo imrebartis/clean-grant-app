@@ -19,7 +19,10 @@ interface UseFormHandlersProps {
   isSaving: boolean
   setIsSaving: React.Dispatch<React.SetStateAction<boolean>>
   setLastSaved: React.Dispatch<React.SetStateAction<Date | null>>
-  onSave?: (data: GrantApplicationFormDataType) => Promise<void>
+  onSave?: (
+    data: GrantApplicationFormDataType,
+    currentStep?: number
+  ) => Promise<void>
   onSubmit?: (data: GrantApplicationFormDataType) => Promise<void>
   router: ReturnType<typeof useRouter>
 }
@@ -34,6 +37,7 @@ export function useFormHandlers(props: UseFormHandlersProps) {
       formData: props.formData,
       setIsSaving: props.setIsSaving,
       setLastSaved: props.setLastSaved,
+      currentStep: props.currentStep,
     },
     validateCurrentStep
   )
@@ -106,38 +110,52 @@ function useNextStep(
     formData,
     setIsSaving,
     setLastSaved,
+    currentStep,
   }: Pick<
     UseFormHandlersProps,
-    'setCurrentStep' | 'onSave' | 'formData' | 'setIsSaving' | 'setLastSaved'
+    | 'setCurrentStep'
+    | 'onSave'
+    | 'formData'
+    | 'setIsSaving'
+    | 'setLastSaved'
+    | 'currentStep'
   >,
   validateCurrentStep: () => boolean
 ) {
-  return useCallback(async () => {
-    if (validateCurrentStep()) {
-      // Save form data when moving to next step
-      if (onSave) {
-        try {
-          setIsSaving(true)
-          await onSave(formData)
-          setLastSaved(new Date())
-        } catch (error) {
-          console.error('Save failed:', error)
-          // Don't prevent navigation on save failure, just log it
-        } finally {
-          setIsSaving(false)
-        }
-      }
+  // Type for the onSave function that can handle both signatures
+  type OnSaveFunction =
+    | ((data: GrantApplicationFormDataType) => Promise<void>)
+    | ((data: GrantApplicationFormDataType, step?: number) => Promise<void>)
 
-      setCurrentStep(prev => Math.min(prev + 1, FORM_STEPS.length - 1))
+  // Handle saving progress
+  const handleSave = useCallback(async () => {
+    if (!onSave) return
+
+    try {
+      setIsSaving(true)
+      // Pass current step to save function for section-based saving
+      if (onSave.length > 1) {
+        await (onSave as OnSaveFunction)(formData, currentStep)
+      } else {
+        await (onSave as (data: GrantApplicationFormDataType) => Promise<void>)(
+          formData
+        )
+      }
+      setLastSaved(new Date())
+    } catch (error) {
+      console.error('Save failed:', error)
+      // Don't prevent navigation on save failure, just log it
+    } finally {
+      setIsSaving(false)
     }
-  }, [
-    validateCurrentStep,
-    setCurrentStep,
-    onSave,
-    formData,
-    setIsSaving,
-    setLastSaved,
-  ])
+  }, [onSave, formData, currentStep, setIsSaving, setLastSaved])
+
+  return useCallback(async () => {
+    if (!validateCurrentStep()) return
+
+    await handleSave()
+    setCurrentStep(prev => Math.min(prev + 1, FORM_STEPS.length - 1))
+  }, [validateCurrentStep, setCurrentStep, handleSave])
 }
 
 function usePreviousStep({

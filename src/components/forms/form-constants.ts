@@ -4,7 +4,7 @@ export const FORM_STEPS = [
     id: 'basic-info',
     title: 'Basic Information',
     description: 'Tell us about your company and contact details',
-    fields: ['company_name', 'founder_name', 'founder_email'],
+    fields: ['company_name', 'founder_name', 'founder_email', 'website_url'],
   },
   {
     id: 'business-overview',

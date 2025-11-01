@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { ApplicationForm } from '@/components/forms/application-form'
+import { ProtectedRoute } from '@/components/auth/protected-route'
 import { useApplications } from '@/hooks/use-applications'
 import {
   type GrantApplication,
@@ -30,13 +31,23 @@ export default function EditApplicationPage() {
     return <NotFoundState />
   }
 
+  // Default form data with required fields
+  const defaultFormData = {
+    company_name: '',
+    founder_name: '',
+    founder_email: '',
+    website_url: '',
+  }
+
   return (
-    <ApplicationForm
-      applicationId={applicationId}
-      initialData={state.application.form_data || {}}
-      onSave={handlers.handleSave}
-      onSubmit={handlers.handleSubmit}
-    />
+    <ProtectedRoute>
+      <ApplicationForm
+        applicationId={applicationId}
+        initialData={state.application?.form_data || defaultFormData}
+        onSave={handlers.handleSave}
+        onSubmit={handlers.handleSubmit}
+      />
+    </ProtectedRoute>
   )
 }
 

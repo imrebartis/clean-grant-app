@@ -249,10 +249,12 @@ function getStatusColor(status: string | null) {
 function getCompletionPercentage(application: GrantApplication) {
   if (!application.form_data) return 0
 
+  // Required fields based on grantApplicationCompleteFormSchema
   const requiredFields = [
     'company_name',
     'founder_name',
     'founder_email',
+    'website_url',
     'business_description',
     'environmental_problem',
     'business_model',

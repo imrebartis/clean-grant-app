@@ -1,8 +1,3 @@
-/**
- * Validation Integration Tests
- * Tests that verify validation schemas work with the updated JSON-based application types
- */
-
 import {
   grantApplicationFormDataSchema,
   grantApplicationInsertSchema,
@@ -20,6 +15,7 @@ describe('Validation Integration', () => {
         company_name: 'CleanTech Innovations',
         founder_name: 'Sarah Johnson',
         founder_email: 'sarah@cleantech.com',
+        website_url: 'https://cleantech-innovations.example.com',
         business_description:
           'We develop advanced water purification systems using AI-driven filtration technology',
         environmental_problem:
@@ -39,11 +35,9 @@ describe('Validation Integration', () => {
         financial_statements_url: 'https://example.com/financials.pdf',
       }
 
-      // Validate form data
       const validatedForm = validateGrantApplicationFormData(formData)
       expect(validatedForm).toEqual(formData)
 
-      // Convert to application insert format (JSON-based structure)
       const applicationData = {
         title: 'Clean Water Innovation Grant Application',
         user_id: '550e8400-e29b-41d4-a716-446655440000' as UserId,
@@ -51,7 +45,6 @@ describe('Validation Integration', () => {
         status: 'draft' as const,
       }
 
-      // Validate as insert data
       const validatedInsert =
         grantApplicationInsertSchema.parse(applicationData)
       expect(validatedInsert.form_data?.company_name).toBe(
@@ -70,7 +63,7 @@ describe('Validation Integration', () => {
         company_name: 'Minimal Company',
         founder_name: 'John Doe',
         founder_email: 'john@minimal.com',
-        // Only some fields filled - others optional for progressive form filling
+        website_url: 'https://minimal-company.example.com',
       }
 
       const validated = validateGrantApplicationFormData(minimalFormData)
@@ -82,7 +75,6 @@ describe('Validation Integration', () => {
 
   describe('when working with existing GrantApplication interface', () => {
     it('should be compatible with JSON-based GrantApplication structure', () => {
-      // Simulate existing application data with JSON form_data structure
       const existingApp: Partial<GrantApplication> = {
         id: '550e8400-e29b-41d4-a716-446655440001' as ApplicationId,
         user_id: '550e8400-e29b-41d4-a716-446655440002' as UserId,
@@ -92,6 +84,7 @@ describe('Validation Integration', () => {
           company_name: 'Existing Company',
           founder_name: 'Jane Doe',
           founder_email: 'jane@existing.com',
+          website_url: 'https://existing-company.example.com',
           business_description: 'Existing business description',
           environmental_problem: 'Existing environmental problem',
           business_model: 'Existing business model',
@@ -105,7 +98,6 @@ describe('Validation Integration', () => {
         updated_at: '2024-01-01T00:00:00Z',
       }
 
-      // Should be able to extract and validate form data from existing application
       if (existingApp.form_data) {
         const validation = grantApplicationFormDataSchema.safeParse(
           existingApp.form_data
@@ -130,12 +122,16 @@ describe('Validation Integration', () => {
         updated_at: '2024-01-01T00:00:00Z',
       }
 
-      // Should handle null form_data gracefully
       expect(emptyApp.form_data).toBeNull()
 
-      // Can validate empty/null form_data
       const validation = grantApplicationFormDataSchema.safeParse({})
-      expect(validation.success).toBe(true)
+      expect(validation.success).toBe(false)
+
+      const appValidation = grantApplicationInsertSchema.safeParse({
+        title: 'Test Application',
+        form_data: null,
+      })
+      expect(appValidation.success).toBe(true)
     })
   })
 })

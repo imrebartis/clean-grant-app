@@ -2,6 +2,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
 import { EmailValidationInput } from './email-validation-input'
+import { UrlValidationInput } from './url-validation-input'
 import { FileUpload } from './file-upload'
 
 interface FormFieldProps {
@@ -27,28 +28,6 @@ function getFieldType(field: string, question?: string) {
     isFileUpload: field === 'financial_statements_url',
     inputType: field.includes('email') ? 'email' : 'text',
   }
-}
-
-// Component for field label
-function FormFieldLabel({
-  field,
-  fieldLabel,
-  question,
-}: {
-  field: string
-  fieldLabel: string
-  question?: string
-}) {
-  return (
-    <Label htmlFor={field} className="text-sm font-medium">
-      {fieldLabel}
-      {question && (
-        <span className="mt-1 block text-xs font-normal text-muted-foreground">
-          {question}
-        </span>
-      )}
-    </Label>
-  )
 }
 
 // Component for field error
@@ -210,6 +189,8 @@ function RegularInputField({
   onChange,
   error,
   inputType,
+  required = false,
+  showLabel = true,
 }: {
   field: string
   fieldLabel: string
@@ -217,16 +198,31 @@ function RegularInputField({
   onChange: (value: string) => void
   error?: string
   inputType: string
+  required?: boolean
+  showLabel?: boolean
 }) {
   return (
-    <Input
-      id={field}
-      type={inputType}
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      placeholder={`Enter your ${fieldLabel.toLowerCase()}`}
-      className={cn(error && 'border-destructive')}
-    />
+    <div className="space-y-2">
+      {showLabel && (
+        <Label htmlFor={field} className="text-sm font-medium">
+          {fieldLabel}
+          {required && (
+            <span className="ml-1 text-destructive" aria-label="required">
+              *
+            </span>
+          )}
+        </Label>
+      )}
+      <Input
+        id={field}
+        type={inputType}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={`Enter your ${fieldLabel.toLowerCase()}`}
+        className={cn(error && 'border-destructive')}
+        required={required}
+      />
+    </div>
   )
 }
 
@@ -283,15 +279,45 @@ function renderEmailField(props: FormFieldInputProps) {
 }
 
 // Component for rendering regular input field
-function renderRegularInputField(props: FormFieldInputProps) {
+function renderRegularInputField({
+  field,
+  fieldLabel,
+  value,
+  onChange,
+  error,
+  inputType,
+}: FormFieldInputProps) {
+  const isBasicInfoField = [
+    'company_name',
+    'founder_name',
+    'founder_email',
+    'website_url',
+  ].includes(field)
+
+  // Special handling for website_url field
+  if (field === 'website_url') {
+    return (
+      <UrlValidationInput
+        id={field}
+        label={fieldLabel}
+        value={value}
+        onChange={onChange}
+        error={error}
+        required={true}
+      />
+    )
+  }
+
   return (
     <RegularInputField
-      field={props.field}
-      fieldLabel={props.fieldLabel}
-      value={props.value}
-      onChange={props.onChange}
-      error={props.error}
-      inputType={props.inputType}
+      field={field}
+      fieldLabel={fieldLabel}
+      value={value}
+      onChange={onChange}
+      error={error}
+      inputType={inputType}
+      required={isBasicInfoField}
+      showLabel={true}
     />
   )
 }
@@ -316,19 +342,13 @@ export function FormField({
 }: FormFieldProps) {
   const fieldLabel = formatFieldLabel(field)
   const { isTextArea, isFileUpload, inputType } = getFieldType(field, question)
-  const isEmailField = inputType === 'email'
+
+  // Email, URL, and file upload fields handle their own errors
+  const shouldShowError =
+    !isFileUpload && inputType !== 'email' && field !== 'website_url'
 
   return (
     <div className="space-y-2">
-      {/* Don't show label for email fields or file uploads as they handle their own labels */}
-      {!isEmailField && !isFileUpload && (
-        <FormFieldLabel
-          field={field}
-          fieldLabel={fieldLabel}
-          question={question}
-        />
-      )}
-
       <FormFieldInput
         field={field}
         value={value}
@@ -341,8 +361,8 @@ export function FormField({
         inputType={inputType}
       />
 
-      {/* Don't show error for email fields or file uploads as they handle their own errors */}
-      {!isEmailField && !isFileUpload && <FormFieldError error={error} />}
+      {/* Show error only for fields that don't handle their own errors */}
+      {shouldShowError && <FormFieldError error={error} />}
     </div>
   )
 }

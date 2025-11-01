@@ -11,6 +11,7 @@ const applicationStatusSchema = z.enum([
   'submitted',
   'processing',
   'completed',
+  'failed',
 ])
 
 // Voice recording field names enum
@@ -35,14 +36,16 @@ export const grantApplicationFormDataSchema = z
     company_name: z
       .string()
       .min(1, 'Company name is required')
-      .max(100, 'Company name must be less than 100 characters')
-      .optional(),
+      .max(100, 'Company name must be less than 100 characters'),
     founder_name: z
       .string()
       .min(1, 'Founder name is required')
-      .max(100, 'Founder name must be less than 100 characters')
-      .optional(),
-    founder_email: z.string().email('Invalid email format').optional(),
+      .max(100, 'Founder name must be less than 100 characters'),
+    founder_email: z.string().email('Invalid email format'),
+    website_url: z
+      .string()
+      .min(1, 'Website URL is required')
+      .url('Please enter a valid URL (e.g., https://example.com)'),
 
     // Voice recording questions (all optional since they can be filled progressively)
     business_description: z
@@ -91,6 +94,10 @@ export const grantApplicationCompleteFormSchema = z
     company_name: z.string().min(1, 'Company name is required').max(100),
     founder_name: z.string().min(1, 'Founder name is required').max(100),
     founder_email: z.string().email('Invalid email format'),
+    website_url: z
+      .string()
+      .min(1, 'Website URL is required')
+      .url('Please enter a valid URL (e.g., https://example.com)'),
 
     // All voice recording questions required for submission
     business_description: z.string().min(1, 'Business description is required'),

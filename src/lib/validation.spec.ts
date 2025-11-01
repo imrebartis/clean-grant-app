@@ -19,6 +19,7 @@ describe('Grant Application Validation Schemas', () => {
           company_name: 'EcoTech Solutions',
           founder_name: 'Jane Smith',
           founder_email: 'jane@ecotech.com',
+          website_url: 'https://ecotech.example.com',
           business_description:
             'We develop innovative solar panel technology that increases efficiency by 40%',
           environmental_problem:
@@ -49,6 +50,7 @@ describe('Grant Application Validation Schemas', () => {
           company_name: 'Test Company',
           founder_name: 'Test Founder',
           founder_email: 'test@example.com',
+          website_url: 'https://example.com',
           business_description: 'Test business description',
           environmental_problem: 'Test environmental problem',
           business_model: 'Test business model',
@@ -109,11 +111,12 @@ describe('Grant Application Validation Schemas', () => {
         }
       })
 
-      it('should accept partial data since all fields are optional in form data schema', () => {
+      it('should accept partial data with only required fields', () => {
         const partialData = {
           company_name: 'Test Company',
           founder_name: 'Test Founder',
           founder_email: 'test@example.com',
+          website_url: 'https://example.com',
           // Missing voice response fields - should be OK for progressive form filling
         }
 
@@ -130,6 +133,7 @@ describe('Grant Application Validation Schemas', () => {
           company_name: 'Test Company',
           founder_name: 'Test Founder',
           founder_email: 'test@example.com',
+          website_url: 'https://example.com',
           // Missing required voice response fields
         }
 
@@ -143,6 +147,7 @@ describe('Grant Application Validation Schemas', () => {
           company_name: 'Test Company',
           founder_name: 'Test Founder',
           founder_email: 'test@example.com',
+          website_url: 'https://example.com',
           business_description: 'Complete business description',
           environmental_problem: 'Complete environmental problem',
           business_model: 'Complete business model',

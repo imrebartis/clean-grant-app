@@ -99,8 +99,22 @@ function canProceedToNext(
   canProceed: boolean
   reason?: string
 } {
-  // Check if this is the basic info step with email validation
+  // For the basic info step, validate all required fields
   if (isBasicInfoStep(currentStep)) {
+    if (!formData.company_name?.trim()) {
+      return {
+        canProceed: false,
+        reason: 'Company name is required',
+      }
+    }
+
+    if (!formData.founder_name?.trim()) {
+      return {
+        canProceed: false,
+        reason: 'Founder name is required',
+      }
+    }
+
     const emailValidation = validateEmailForNavigation(formData.founder_email)
     if (!emailValidation.isValid) {
       return {
@@ -108,9 +122,26 @@ function canProceedToNext(
         reason: emailValidation.message,
       }
     }
+
+    if (!formData.website_url?.trim()) {
+      return {
+        canProceed: false,
+        reason: 'Website URL is required',
+      }
+    }
+
+    try {
+      // This will throw if the URL is invalid
+      new URL(formData.website_url)
+    } catch {
+      return {
+        canProceed: false,
+        reason: 'Please enter a valid URL (e.g., https://example.com)',
+      }
+    }
   }
 
-  // Add other step-specific validations here if needed
+  // For all other steps, allow proceeding
   return { canProceed: true }
 }
 
